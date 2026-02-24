@@ -39,7 +39,7 @@ NEED TO ADD: When called, request stream, start service. Drop and stop after ful
 ### 1. Install build dependencies
 
 ```bash
-sudo apt install libzvbi-dev
+sudo apt install libzvbi-dev build-essential
 ```
 
 ### 2. Fix your HDHomeRun IP
@@ -58,8 +58,9 @@ It lists all elementary streams including their PIDs. You are looking for a stre
 Then ffprobe on Linux, Download from https://gyan.dev/ffmpeg/builds.
 
 ```bash
-sudo apt install ffmpeg build-essential
-ffprobe.exe http://192.168.1.50/auto/v21 2>&1 | findstr /i teletext
+sudo apt install ffmpeg
+ffprobe http://192.168.1.50/auto/v21 2>&1 | findstr /i teletext
+sudo apt remove ffmpeg
 ```
 
 Comes also in WIndows version if you want to keep the Linuxbox squeakyclean (the essential build is enough): just extract, and run from PowerShell or cmd (Identical output to the Linux version) This is probably the cleanest option since it gives you the exact same hex PID string you would get on Linux.
