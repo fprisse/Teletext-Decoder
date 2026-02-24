@@ -54,23 +54,15 @@ at `/snap/bin/chromium`. Use whichever path your system returns.
 
 ---
 
-## Step 4 — Place your HTML page
-```bash
-sudo mkdir -p /home/kiosk/display
-sudo cp /path/to/your/index.html /home/kiosk/display/index.html
-sudo chown -R kiosk:kiosk /home/kiosk/display
-```
-
----
-
-## Step 5 — Create the systemd service
+## Step 4 — Create the systemd service
 ```bash
 sudo nano /etc/systemd/system/kiosk.service
 ```
 ```ini
 [Unit]
 Description=Kiosk Display
-After=systemd-logind.service
+After=systemd-logind.service network-online.target
+Wants=network-online.target
 
 [Service]
 User=kiosk
@@ -80,7 +72,7 @@ StandardInput=tty
 EnvironmentFile=-/etc/environment
 ExecStart=/usr/bin/cage -- chromium-browser --kiosk --noerrdialogs \
   --disable-infobars --no-first-run \
-  file:///home/kiosk/display/index.html
+  http://127.0.0.1:1880/dashboard
 Restart=always
 RestartSec=3
 
@@ -88,12 +80,9 @@ RestartSec=3
 WantedBy=multi-user.target
 ```
 
-Adjust the `file://` path if you placed your HTML page elsewhere.
-If loading a network URL, replace the `file://` argument with the full URL.
-
 ---
 
-## Step 6 — Disable GDM and enable the kiosk service
+## Step 5 — Disable GDM and enable the kiosk service
 ```bash
 sudo systemctl disable gdm
 sudo systemctl enable kiosk
@@ -101,7 +90,7 @@ sudo systemctl enable kiosk
 
 ---
 
-## Step 7 — Reboot
+## Step 6 — Reboot
 ```bash
 sudo reboot
 ```
@@ -122,7 +111,7 @@ View logs:
 journalctl -u kiosk -f
 ```
 
-Restart (e.g. after updating the HTML page):
+Restart:
 ```bash
 sudo systemctl restart kiosk
 ```
@@ -130,15 +119,6 @@ sudo systemctl restart kiosk
 Stop:
 ```bash
 sudo systemctl stop kiosk
-```
-
----
-
-## Updating the HTML page
-```bash
-sudo cp /path/to/new/index.html /home/kiosk/display/index.html
-sudo chown kiosk:kiosk /home/kiosk/display/index.html
-sudo systemctl restart kiosk
 ```
 
 ---
@@ -167,24 +147,41 @@ sudo rm -rf /home/kiosk/.config/chromium
 sudo systemctl restart kiosk
 ```
 
-**Page loads before network is ready (network URL only)**
-Add to the `[Unit]` section of the service:
+**Page loads before the service on 127.0.0.1:1880 is ready**
+Add a pre-start wait loop to the service:
 ```ini
-After=systemd-logind.service network-online.target
-Wants=network-online.target
+ExecStartPre=/bin/bash -c 'until curl -s http://127.0.0.1:1880/dashboard > /dev/null; do sleep 2; done'
 ```
 
 **Display turns off / screensaver activates**
-Add before `ExecStart` in the service:
-```ini
-ExecStartPre=/usr/bin/xset s off
-ExecStartPre=/usr/bin/xset -dpms
-```
-Or handle it in a cage startup wrapper script that calls `wlopm` (Wayland equivalent):
+Install `wlopm` and add to the service:
 ```bash
 sudo apt install wlopm
 ```
-Then in the service:
 ```ini
 ExecStartPost=/usr/bin/wlopm --on all
+```
+
+---
+
+## Display output selection (multiple displays)
+
+Install `wlr-randr` to inspect and control outputs:
+```bash
+sudo apt install wlr-randr
+```
+
+Query available outputs from SSH while the kiosk is running:
+```bash
+sudo -u kiosk WAYLAND_DISPLAY=/run/user/$(id -u kiosk)/wayland-1 wlr-randr
+```
+
+Disable unwanted outputs by adding to the service:
+```ini
+ExecStartPost=/usr/bin/wlr-randr --output HDMI-A-1 --on --output DP-1 --off
+```
+
+To pin cage to a specific GPU:
+```ini
+Environment=WLR_DRM_DEVICES=/dev/dri/card1
 ```
