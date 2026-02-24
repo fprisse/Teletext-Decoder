@@ -45,14 +45,25 @@ sudo apt install libzvbi-dev ffmpeg build-essential
 Assign fixed IP in DHCP IP-binding table of router
 
 ### 3. Find the teletext PID for your channel
+First use VLC (on whatever system): Easiest and then you know the TT-stream is available.
 
 ```bash
-ffprobe http://<hdhomerun-ip>/auto/v<channel> 2>&1 | grep -i teletext
+Media → Open Network Stream → http://192.168.1.50/auto/v21
+Then: Tools → Media Information → Codec
 ```
 
-Look for a line like:
+It lists all elementary streams including their PIDs. You are looking for a stream described as "Teletext" or "DVB Teletext".
+
+Then ffprobe on Linux, Download from https://gyan.dev/ffmpeg/builds.
+
+```bash
+ffprobe.exe http://192.168.1.50/auto/v21 2>&1 | findstr /i teletext
 ```
-Stream #0:3[0x199]: Subtitle: dvb_teletext
+
+Comes also in WIndows version if you want to keep the Linuxbox squeakyclean (the essential build is enough): just extract, and run from PowerShell or cmd (Identical output to the Linux version) This is probably the cleanest option since it gives you the exact same hex PID string you would get on Linux.
+```bash
+ffprobe http://<hdhomerun-ip>/auto/v<channel> 2>&1 | grep -i teletext
+Look for a line like: Stream #0:3[0x199]: Subtitle: dvb_teletext
 ```
 Convert the hex PID to decimal: `0x199` = **409**.
 You only need to do this once per channel.
