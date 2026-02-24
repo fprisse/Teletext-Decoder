@@ -96,7 +96,7 @@ make
 ### 5. Test
 
 In Node-RED:
-UDP-IN: 127.0.0.1:5555 ; Output=String
+UDP-IN: 127.0.0.1:5555 ; Output=String  
 JSON node (optional) => DEBUG
 
 ```bash
