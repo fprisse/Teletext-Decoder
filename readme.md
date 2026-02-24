@@ -6,6 +6,7 @@ Stream from an [HDHomeRun](https://www.silicondust.com/) network tuner,
 decodes teletext pages, and emits one JSON object per page over UDP —
 designed to feed [Node-RED](https://nodered.org/) or any other local
 consumer.
+https://shop.silicondust.com/shop/product-category/dvb/?scrollto=737097
 
 ```
 HDHomeRun  →  HTTP/TCP  →  ttxd  →  UDP 127.0.0.1  →  Node-RED
@@ -38,7 +39,7 @@ NEED TO ADD: When called, request stream, start service. Drop and stop after ful
 ### 1. Install build dependencies
 
 ```bash
-sudo apt install libzvbi-dev ffmpeg build-essential
+sudo apt install libzvbi-dev
 ```
 
 ### 2. Fix your HDHomeRun IP
@@ -57,6 +58,7 @@ It lists all elementary streams including their PIDs. You are looking for a stre
 Then ffprobe on Linux, Download from https://gyan.dev/ffmpeg/builds.
 
 ```bash
+sudo apt install ffmpeg build-essential
 ffprobe.exe http://192.168.1.50/auto/v21 2>&1 | findstr /i teletext
 ```
 
