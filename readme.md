@@ -236,12 +236,13 @@ original motivation for this project was to consume teletext news pages
 from a local DVB signal in Node-RED without the overhead of ffmpeg or a
 full TV server stack like TVHeadend.
 
-Inspired by [ttxd by Tobias Girstmair](https://git.gir.st/ttxd.git),
+Inspired by [ttxd by Tobias Girstmair],
 which solved the same problem for DVB-T2 using Perl and a different
 tool chain.
 
-## License
+## Credits
+This project stands on the shoulders of [Tobias Girstmair's ttxd](https://git.gir.st/ttxd.git) — without his work this would not exist. He did the hard part: figuring out that DVB teletext could be extracted from a transport stream on Linux, hunting down the obscure dvbtext and vtx2ascii tools when their original pages had disappeared from the internet, patching dvbtext to work with DVB-T2, and building the complete pipeline from DVB signal to HTML. His write-up is essential reading for understanding the problem this project solves.
+This implementation takes a different approach — plain C with libzvbi replacing the Perl/dvbtext/vtx2ascii stack, and an HDHomeRun over HTTP replacing a local DVB adapter — but **the analysis, the insight, and the solution path are entirely his hard labor**
 
-GPL-3.0. See [LICENSE](LICENSE).
-
+## License(s)
 libzvbi is LGPL-2.0.
