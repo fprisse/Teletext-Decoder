@@ -1,4 +1,5 @@
 # Httpstream to decoded teletekst
+## Please Note: This i swork in progress, when up and running this deposit will be updated
 
 DVB teletext acquisition service for Linux. Reads a live MPEG Transport
 Stream from an [HDHomeRun](https://www.silicondust.com/) network tuner,
