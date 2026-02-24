@@ -6,7 +6,8 @@ Stream from an [HDHomeRun](https://www.silicondust.com/) network tuner,
 decodes teletext pages, and emits one JSON object per page over UDP —
 designed to feed [Node-RED](https://nodered.org/) or any other local
 consumer.
-https://shop.silicondust.com/shop/product-category/dvb/?scrollto=737097
+
+[HDHomeRun DVB tuners](https://shop.silicondust.com/shop/product-category/dvb/?scrollto=737097)
 
 ```
 HDHomeRun  →  HTTP/TCP  →  ttxd  →  UDP 127.0.0.1  →  Node-RED
@@ -24,7 +25,7 @@ HDHomeRun  →  HTTP/TCP  →  ttxd  →  UDP 127.0.0.1  →  Node-RED
 - Automatic reconnection if the stream drops
 - Runs as a hardened systemd service
 
-NEED TO ADD: When called, request stream, start service. Drop and stop after fullrun
+> NEED TO ADD: When called, request stream, start service. Drop and stop after fullrun
 
 ## Requirements
 
@@ -48,10 +49,10 @@ Assign fixed IP in DHCP IP-binding table of router
 ### 3. Find the teletext PID for your channel
 First use VLC (on whatever system): Easiest and then you know the TT-stream is available.
 
-```bash
-Media → Open Network Stream → http://192.168.1.50/auto/v21
-Then: Tools → Media Information → Codec
-```
+
+> Media → Open Network Stream → http://192.168.1.50/auto/v21
+> Then: Tools → Media Information → Codec
+
 
 It lists all elementary streams including their PIDs. You are looking for a stream described as "Teletext" or "DVB Teletext".
 
@@ -59,15 +60,17 @@ Then ffprobe on Linux, Download from https://gyan.dev/ffmpeg/builds.
 
 ```bash
 sudo apt install ffmpeg
-ffprobe http://192.168.1.50/auto/v21 2>&1 | findstr /i teletext
+ffprobe http://192.168.1.50/auto/v<channel> 2>&1 | grep -i teletext
+# optional — remove after use
 sudo apt remove ffmpeg
 ```
 
 Comes also in WIndows version if you want to keep the Linuxbox squeakyclean (the essential build is enough): just extract, and run from PowerShell or cmd (Identical output to the Linux version) This is probably the cleanest option since it gives you the exact same hex PID string you would get on Linux.
-```bash
-ffprobe http://<hdhomerun-ip>/auto/v<channel> 2>&1 | grep -i teletext
-Look for a line like: Stream #0:3[0x199]: Subtitle: dvb_teletext
+```powershell
+ffprobe.exe http://192.168.1.50/auto/v21 2>&1 | findstr /i teletext
 ```
+> Look for a line like: Stream #0:3[0x199]: Subtitle: dvb_teletext
+
 Convert the hex PID to decimal: `0x199` = **409**.
 You only need to do this once per channel.
 
