@@ -41,11 +41,8 @@ NEED TO ADD: When called, request stream, start service. Drop and stop after ful
 sudo apt install libzvbi-dev ffmpeg build-essential
 ```
 
-### 2. Find your HDHomeRun IP
-
-```bash
-hdhomerun_config discover
-```
+### 2. Fix your HDHomeRun IP
+Assign fixed IP in DHCP IP-binding table of router
 
 ### 3. Find the teletext PID for your channel
 
