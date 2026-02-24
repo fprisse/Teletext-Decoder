@@ -71,8 +71,10 @@ ffprobe.exe http://192.168.1.50/auto/v21 2>&1 | findstr /i teletext
 ```
 > Look for a line like: Stream #0:3[0x199]: Subtitle: dvb_teletext
 
-Convert the hex PID to decimal: `0x199` = **409**.
-You only need to do this once per channel.
+```bash
+# Convert the hex PID to decimal: `0x199` = 409
+printf '%d\n' 0x199
+```
 
 ### 4. Build
 ```bash
@@ -93,8 +95,12 @@ make
 
 ### 5. Test
 
+In Node-RED:
+UDP-IN: 127.0.0.1:5555 ; Output=String
+JSON node (optional) => DEBUG
+
 ```bash
-# Terminal 1 — watch UDP output
+# Optional if not using NodeRed yet : Terminal 1 — watch UDP output
 nc -ulk 5555
 
 # Terminal 2 — start the service
