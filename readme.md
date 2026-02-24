@@ -1,4 +1,4 @@
-# ttxd
+# Httpstream to decoded teletekst
 
 DVB teletext acquisition service for Linux. Reads a live MPEG Transport
 Stream from an [HDHomeRun](https://www.silicondust.com/) network tuner,
