@@ -75,6 +75,16 @@ Convert the hex PID to decimal: `0x199` = **409**.
 You only need to do this once per channel.
 
 ### 4. Build
+```bash
+mkdir -p ~/ttxd
+cd ~/ttxd
+
+> Then copy or create each file there:
+> - ttxd.c
+> - Makefile
+> - ttxd.service
+
+~/ttxd means /home/<youruser>/ttxd — a standard place for a user project on Ubuntu. Not /opt or /usr/local/src which are more for system-wide software, and not the home directory root which gets cluttered.
 
 ```bash
 make
