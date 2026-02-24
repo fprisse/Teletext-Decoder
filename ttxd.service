@@ -1,0 +1,36 @@
+[Unit]
+Description=DVB Teletext service (HDHomeRun → UDP → Node-RED)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# --- Edit these four values ---
+# Format: ttxd <hdhomerun-ip> <channel> <teletext-pid> <udp-port>
+# Find PID with: ffprobe http://<ip>/auto/v<channel> 2>&1 | grep teletext
+ExecStart=/usr/local/bin/ttxd 192.168.1.50 21 409 5555
+
+# Restart automatically if the process exits for any reason
+Restart=always
+RestartSec=10
+
+# Log to systemd journal
+# View with: journalctl -u ttxd -f
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ttxd
+
+# Run as a dedicated non-root system user
+# Create with: sudo useradd -r -s /usr/sbin/nologin ttxd
+User=ttxd
+Group=ttxd
+
+# Harden the service
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
