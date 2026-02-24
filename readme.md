@@ -78,6 +78,7 @@ You only need to do this once per channel.
 ```bash
 mkdir -p ~/ttxd
 cd ~/ttxd
+```
 
 > Then copy or create each file there:
 > - ttxd.c
