@@ -15,13 +15,15 @@ HDHomeRun  →  HTTP/TCP  →  ttxd  →  UDP 127.0.0.1  →  Node-RED
 
 - Single C source file, ~370 lines
 - Two dependencies only: **libzvbi** and **libc**
-- No ffmpeg, no libcurl, no external tools at runtime
+- No ffmpeg, no libcurl, **no external tools at runtime**
 - Minimal HTTP/1.1 client using plain TCP sockets
 - Full MPEG-TS demux and PES reassembly built in
 - Teletext decoded per ETSI 300 706 via libzvbi
 - One UDP datagram per complete teletext page
 - Automatic reconnection if the stream drops
 - Runs as a hardened systemd service
+
+NEED TO ADD: When called, request stream, start service. Drop and stop after fullrun
 
 ## Requirements
 
