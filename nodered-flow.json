@@ -1,0 +1,167 @@
+[
+    {
+        "id": "ttxd-tab",
+        "type": "tab",
+        "label": "ttxd Teletext",
+        "disabled": false,
+        "info": "Receives teletext pages from ttxd service via UDP and displays them.\nOne JSON object per complete teletext page.\nFilter by page number using the switch node."
+    },
+    {
+        "id": "udp-in",
+        "type": "udp in",
+        "z": "ttxd-tab",
+        "name": "ttxd UDP 5555",
+        "iface": "127.0.0.1",
+        "port": "5555",
+        "ipv": "udp4",
+        "multicast": "false",
+        "group": "",
+        "datatype": "utf8",
+        "x": 120,
+        "y": 100,
+        "wires": [["json-parse"]]
+    },
+    {
+        "id": "json-parse",
+        "type": "json",
+        "z": "ttxd-tab",
+        "name": "Parse JSON",
+        "property": "payload",
+        "action": "obj",
+        "pretty": false,
+        "x": 310,
+        "y": 100,
+        "wires": [["page-switch", "debug-raw"]]
+    },
+    {
+        "id": "debug-raw",
+        "type": "debug",
+        "z": "ttxd-tab",
+        "name": "All pages",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 490,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "page-switch",
+        "type": "switch",
+        "z": "ttxd-tab",
+        "name": "Route by page",
+        "property": "payload.page",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "100",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "101",
+                "vt": "num"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 3,
+        "x": 490,
+        "y": 100,
+        "wires": [
+            ["format-page-100"],
+            ["format-page-101"],
+            ["debug-other"]
+        ]
+    },
+    {
+        "id": "format-page-100",
+        "type": "function",
+        "z": "ttxd-tab",
+        "name": "Format page 100",
+        "func": "// Page 100 — typically the index/front page\n// Join non-empty lines into readable text\nvar lines = msg.payload.lines;\nvar text = lines\n    .filter(function(l) { return l.trim().length > 0; })\n    .join('\\n');\n\nmsg.payload = {\n    page:    msg.payload.page,\n    subpage: msg.payload.subpage,\n    ts:      msg.payload.ts,\n    text:    text,\n    lines:   lines\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 710,
+        "y": 60,
+        "wires": [["debug-page-100"]]
+    },
+    {
+        "id": "format-page-101",
+        "type": "function",
+        "z": "ttxd-tab",
+        "name": "Format page 101",
+        "func": "// Page 101 — typically news headlines\n// Join non-empty lines into readable text\nvar lines = msg.payload.lines;\nvar text = lines\n    .filter(function(l) { return l.trim().length > 0; })\n    .join('\\n');\n\nmsg.payload = {\n    page:    msg.payload.page,\n    subpage: msg.payload.subpage,\n    ts:      msg.payload.ts,\n    text:    text,\n    lines:   lines\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 710,
+        "y": 120,
+        "wires": [["debug-page-101"]]
+    },
+    {
+        "id": "debug-page-100",
+        "type": "debug",
+        "z": "ttxd-tab",
+        "name": "Page 100",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "payload.text",
+        "targetType": "msg",
+        "statusVal": "payload.text",
+        "statusType": "msg",
+        "x": 940,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "debug-page-101",
+        "type": "debug",
+        "z": "ttxd-tab",
+        "name": "Page 101",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "payload.text",
+        "targetType": "msg",
+        "statusVal": "payload.text",
+        "statusType": "msg",
+        "x": 940,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "debug-other",
+        "type": "debug",
+        "z": "ttxd-tab",
+        "name": "Other pages",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 710,
+        "y": 180,
+        "wires": []
+    }
+]
