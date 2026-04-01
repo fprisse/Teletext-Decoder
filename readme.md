@@ -1,5 +1,5 @@
 # Httpstream to decoded teletekst
-## Please Note: This i swork in progress, when up and running this deposit will be updated
+## Please Note: This is work in progress, when up and running this deposit will be updated
 
 DVB teletext acquisition service for Linux. Reads a live MPEG Transport
 Stream from an [HDHomeRun](https://www.silicondust.com/) network tuner,
@@ -15,7 +15,7 @@ HDHomeRun  →  HTTP/TCP  →  ttxd  →  UDP 127.0.0.1  →  Node-RED
 
 ## Features
 
-- Single C source file, ~370 lines
+- Single C source file
 - Two dependencies only: **libzvbi** and **libc**
 - No ffmpeg, no libcurl, **no external tools at runtime**
 - Minimal HTTP/1.1 client using plain TCP sockets
@@ -43,37 +43,52 @@ HDHomeRun  →  HTTP/TCP  →  ttxd  →  UDP 127.0.0.1  →  Node-RED
 sudo apt install libzvbi-dev build-essential
 ```
 
+> Note: `libzvbi-dev` on Ubuntu 24.04 does not ship a pkg-config `.pc` file.
+> The Makefile therefore links with `-lzvbi` directly instead of using `pkg-config`.
+
 ### 2. Fix your HDHomeRun IP
-Assign fixed IP in DHCP IP-binding table of router
+Assign fixed IP in DHCP IP-binding table of router.
+
+The HDHomeRun exposes two ports:
+- Port **80** — web interface and `/lineup.json`
+- Port **5004** — MPEG-TS stream endpoint (used by ttxd)
+
+To discover your channel numbers and confirm stream URLs:
+```bash
+curl http://<hdhomerun-ip>/lineup.json | python3 -m json.tool | grep -E "GuideNumber|URL"
+```
 
 ### 3. Find the teletext PID for your channel
+
 First use VLC (on whatever system): Easiest and then you know the TT-stream is available.
 
-
-> Media → Open Network Stream → http://192.168.1.50/auto/v21
+> Media → Open Network Stream → `http://<hdhomerun-ip>:5004/auto/v<channel>`
 > Then: Tools → Media Information → Codec
-
 
 It lists all elementary streams including their PIDs. You are looking for a stream described as "Teletext" or "DVB Teletext".
 
-Then ffprobe on Linux, Download from https://gyan.dev/ffmpeg/builds.
+Then ffprobe on Linux:
 
 ```bash
 sudo apt install ffmpeg
-ffprobe http://192.168.1.50/auto/v<channel> 2>&1 | grep -i teletext
+ffprobe -v verbose http://<hdhomerun-ip>:5004/auto/v<channel> 2>&1 | grep -i teletext
 # optional — remove after use
 sudo apt remove ffmpeg
 ```
 
-Comes also in WIndows version if you want to keep the Linuxbox squeakyclean (the essential build is enough): just extract, and run from PowerShell or cmd (Identical output to the Linux version) This is probably the cleanest option since it gives you the exact same hex PID string you would get on Linux.
+> The `-v verbose` flag is required — without it ffprobe suppresses stream detail and teletext will not appear in the output.
+
+Windows version if you want to keep the Linux box squeaky clean (the essential build is enough): just extract, and run from PowerShell or cmd (identical output to the Linux version). This is probably the cleanest option since it gives you the exact same hex PID string you would get on Linux.
+
 ```powershell
-ffprobe.exe http://192.168.1.50/auto/v21 2>&1 | findstr /i teletext
+ffprobe.exe http://<hdhomerun-ip>:5004/auto/v<channel> 2>&1 | findstr /i teletext
 ```
-> Look for a line like: Stream #0:3[0x199]: Subtitle: dvb_teletext
+
+> Look for a line like: `Stream #0:3[0x1b65](dut): Subtitle: dvb_teletext`
 
 ```bash
-# Convert the hex PID to decimal: `0x199` = 409
-printf '%d\n' 0x199
+# Convert the hex PID to decimal: 0x1b65 = 7013
+printf '%d\n' 0x1b65
 ```
 
 ### 4. Build
@@ -87,7 +102,7 @@ cd ~/ttxd
 > - Makefile
 > - ttxd.service
 
-~/ttxd means /home/<youruser>/ttxd — a standard place for a user project on Ubuntu. Not /opt or /usr/local/src which are more for system-wide software, and not the home directory root which gets cluttered.
+`~/ttxd` means `/home/<youruser>/ttxd` — a standard place for a user project on Ubuntu. Not `/opt` or `/usr/local/src` which are more for system-wide software, and not the home directory root which gets cluttered.
 
 ```bash
 make
@@ -96,30 +111,30 @@ make
 ### 5. Test
 
 In Node-RED:
-UDP-IN: 127.0.0.1:5555 ; Output=String  
+UDP-IN: `127.0.0.1:5555` ; Output=String  
 JSON node (optional) => DEBUG
 
 ```bash
-# Optional if not using NodeRed yet : Terminal 1 — watch UDP output
+# Optional if not using Node-RED yet: Terminal 1 — watch UDP output
 nc -ulk 5555
 
 # Terminal 2 — start the service
-./ttxd 192.168.1.50 21 409 5555
+./ttxd 192.168.1.154:5004 1 7013 5555
 ```
 
-JSON objects will appear in terminal 1 as pages are received.
+JSON objects will appear in terminal 1 as pages are received. Teletext pages cycle slowly — allow 10–30 seconds before the first complete page is decoded.
 
 ## Usage
 
 ```
-ttxd <hdhomerun-ip> <channel> <teletext-pid> <udp-port>
+ttxd <hdhomerun-ip>[:<port>] <channel> <teletext-pid> <udp-port>
 ```
 
 | Argument | Example | Description |
 |---|---|---|
-| `hdhomerun-ip` | `192.168.1.50` | IP address of the HDHomeRun device |
-| `channel` | `21` | Channel number |
-| `teletext-pid` | `409` | Teletext PID in decimal (find with ffprobe) |
+| `hdhomerun-ip` | `192.168.1.154:5004` | IP address and streaming port of the HDHomeRun device. Port defaults to 5004 if omitted. |
+| `channel` | `1` | Channel number (from `/lineup.json`) |
+| `teletext-pid` | `7013` | Teletext PID in decimal (find with ffprobe) |
 | `udp-port` | `5555` | UDP port to send JSON to on 127.0.0.1 |
 
 ## Output Format
