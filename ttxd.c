@@ -55,6 +55,7 @@
 #define HDHOMERUN_PORT  5004    /* default HDHomeRun streaming port    */
 
 /* ------------------------------------------------------------------ */
+static char               g_tuner[32] = "auto";  /* "auto" or tuner index e.g. "0","1","2" */
 static vbi_dvb_demux     *g_demux    = NULL;
 static vbi_decoder       *g_dec      = NULL;
 static int                g_udp_fd   = -1;
@@ -418,11 +419,11 @@ static int http_request(int fd, const char *host, int port, int channel)
 {
     char req[256];
     int  len = snprintf(req, sizeof(req),
-                        "GET /auto/v%d HTTP/1.1\r\n"
+                        "GET /%s/v%d HTTP/1.1\r\n"
                         "Host: %s:%d\r\n"
                         "Connection: close\r\n"
                         "\r\n",
-                        channel, host, port);
+                        g_tuner, channel, host, port);
 
     ssize_t sent = send(fd, req, (size_t)len, 0);
     if (sent != (ssize_t)len) {
@@ -493,9 +494,9 @@ static int http_skip_headers(int fd)
 /* ------------------------------------------------------------------ */
 int main(int argc, char *argv[])
 {
-    if (argc != 5) {
+    if (argc < 5 || argc > 6) {
         fprintf(stderr,
-            "Usage: %s <hdhomerun-ip>[:<port>] <channel> <teletext-pid> <udp-port>\n"
+            "Usage: %s <hdhomerun-ip>[:<port>] <channel> <teletext-pid> <udp-port> [<tuner>]\n"
             "\n"
             "  hdhomerun-ip  IP of the HDHomeRun device (port defaults to %d)\n"
             "  channel       Channel number (e.g. 1)\n"
@@ -503,7 +504,8 @@ int main(int argc, char *argv[])
             "                Find with: ffprobe http://<ip>:%d/auto/v<ch> 2>&1"
             " | grep teletext\n"
             "  udp-port      UDP port to send JSON to on 127.0.0.1"
-            " (e.g. 5555)\n",
+            " (e.g. 5555)\n"
+            "  tuner         Tuner index to use: 0, 1, 2 ... or 'auto' (default)\n",
             argv[0], HDHOMERUN_PORT, HDHOMERUN_PORT);
         return 1;
     }
@@ -530,6 +532,20 @@ int main(int argc, char *argv[])
     int channel  = atoi(argv[2]);
     g_pid        = atoi(argv[3]);
     int udp_port = atoi(argv[4]);
+
+    /* Optional tuner argument — "auto" or a numeric index */
+    if (argc == 6) {
+        strncpy(g_tuner, argv[5], sizeof(g_tuner) - 1);
+        g_tuner[sizeof(g_tuner) - 1] = '\0';
+        /* Validate: must be "auto" or a non-negative integer */
+        if (strcmp(g_tuner, "auto") != 0) {
+            int t = atoi(g_tuner);
+            if (t < 0 || (t == 0 && g_tuner[0] != '0')) {
+                fprintf(stderr, "ttxd: invalid tuner '%s' — use 'auto' or a tuner index (0,1,2...)\n", g_tuner);
+                return 1;
+            }
+        }
+    }
 
     if (g_pid <= 0 || g_pid > 8191) {
         fprintf(stderr, "ttxd: invalid PID %d\n", g_pid);
@@ -561,8 +577,8 @@ int main(int argc, char *argv[])
     if (!zvbi_init()) return 1;
 
     fprintf(stderr,
-            "ttxd: stream=http://%s:%d/auto/v%d  PID=%d  → udp://127.0.0.1:%d\n",
-            host, stream_port, channel, g_pid, udp_port);
+            "ttxd: stream=http://%s:%d/%s/v%d  PID=%d  → udp://127.0.0.1:%d\n",
+            host, stream_port, g_tuner, channel, g_pid, udp_port);
 
     /* Main reconnect loop ------------------------------------------- */
     static uint8_t rbuf[RECV_BUF_SIZE];
