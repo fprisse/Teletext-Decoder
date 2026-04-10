@@ -10,7 +10,7 @@ Type=simple
 # Format: ttxd <hdhomerun-ip>[:<port>] <channel> <teletext-pid> <udp-port>
 # Find PID with: ffprobe http://<ip>:<port>/auto/v<channel> 2>&1 | grep teletext
 # for auto select : ExecStart=/usr/local/bin/ttxd 192.168.1.154:5004 1 7013 5555 : but below is for tuner 2
-ExecStart=/usr/local/bin/ttxd 192.168.1.154:5004 1 7013 5555 2
+ExecStart=/usr/local/bin/ttxd 192.168.1.154:5004 1 7013 5555 1
 
 # Restart automatically if the process exits for any reason
 Restart=always
